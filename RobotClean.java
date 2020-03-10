@@ -42,6 +42,8 @@ public class Robot extends TimedRobot {
   Joystick control_stick;
   DifferentialDrive m_drive;
 
+ //////////////////////////Speed Definitions\\\\\\\\\\\\\\\\\\\\\\\\\
+
   double m_deadZone;
   double m_driveMotorSpeed;
   double m_driveTurnSpeed;
@@ -60,14 +62,16 @@ public class Robot extends TimedRobot {
   double m_ClimbDown;
   double m_CrawlRight;
   double m_CrawlLeft;
+  
 
+ 
   static final int IMG_WIDTH = 320;
   static final int IMG_HEIGHT = 240;
   
 //////////////////////////BUTTON MAPPINGs\\\\\\\\\\\\\\\\\\\\\\\\\
   
                         // Control Stick \\
-    static final int BTNBELT = 1;        //Belt Forward
+  static final int BTNBELT = 1;        //Belt Forward
   static final int BTNINTAKE = 2;        //Intake
   static final int BTNSHOOTERHIGH = 3;   //Shooter High
   static final int BTNSHOOTERLOW = 4;    //Shooter Low
@@ -85,10 +89,10 @@ public class Robot extends TimedRobot {
   static final int BTNColorGreen = 9;    // Green Color Spinner
   static final int BTNColorBlue = 10;    // Blue Color Spinner
   static final int BTNColorYellow = 11;  // Yellow Color Spinner
-  //////////////////////////BUTTON MAPPINGs\\\\\\\\\\\\\\\\\\\\\\\\\
+
+  //////////////////////////Color Count definitions\\\\\\\\\\\\\\\\\\\\\\\\\
 
   static final int NONE = -1;
-  //constants for each color count
   static final int greenCount = 1;
   static final int redCount = 1;
   static final int yellowCount = 1;
@@ -100,23 +104,22 @@ public class Robot extends TimedRobot {
   static int redTemp = 0;
   static int blueTemp = 0;
   static int yellowTemp = 0;
-  //Commands for the climbing piston
   //startTotal is used to reset any variable
   static final int startTotal = 0;
   //dont touch anything with endTotal it works somehow
   static final int endtotal = 6;
   //used to increment rotations because ++ was not working at the time of test
   static final int rotationAdd = 1;
-  static boolean commandRan = false;
 
+  //////////////////////////Motor Set-up\\\\\\\\\\\\\\\\\\\\\\\\\
+ 
   PWMVictorSPX m_frontRight = new PWMVictorSPX(6);
   PWMVictorSPX m_frontLeft = new PWMVictorSPX(7);
   PWMVictorSPX m_rearRight = new PWMVictorSPX(8);
   PWMVictorSPX m_rearLeft = new PWMVictorSPX(9);
 
-  //possibly use this constructor instead of what is above//seen in other teams code //kacper
   WPI_VictorSPX m_frontLight = new WPI_VictorSPX(10);
-
+ //////////////////////////Speed Control Group for driving\\\\\\\\\\\\\\\\\\\\\\\\\
   SpeedControllerGroup m_left = new SpeedControllerGroup(m_frontLeft, m_rearLeft);
   SpeedControllerGroup m_right = new SpeedControllerGroup(m_frontRight, m_rearRight);
   
@@ -129,7 +132,6 @@ public class Robot extends TimedRobot {
  Spark CrawlMotor = new Spark(5);
   int retries;
   
-  ADXRS450_Gyro gyro = new ADXRS450_Gyro();
   Timer timer = new Timer();
   static boolean stage1 = false;
   static boolean stage2 = false;
@@ -153,13 +155,12 @@ public class Robot extends TimedRobot {
   public void robotInit() {
 
     System.out.println("Robot Init: ");
- //liftPiston = new DoubleSolenoid(0, 1); // Cylinder solenoid ch. 0/1 for Lift Piston
-   // hatchPiston = new DoubleSolenoid(2, 3); // Cylinder solenoid ch. 2/3 for Climbing Piston
+
+    //////////////////////////Variable assignment\\\\\\\\\\\\\\\\\\\\\\\\\
 
     m_deadZone = 0.1;
     m_driveMotorSpeed = 1;
     m_driveTurnSpeed = 0.75;
-    displayCtr = 0;
     Y = 0; //don't delete the sacred Y
     //Intake and Outake motor speeds
     m_Intake = 0.30;
@@ -172,6 +173,7 @@ public class Robot extends TimedRobot {
     m_ClimbDown = -.5;
     m_CrawlRight = .5;
     m_CrawlLeft = -.5;
+    m_zero = 0.0;
 
     drive_stick = new Joystick(0);
     control_stick = new Joystick(1);
@@ -180,18 +182,7 @@ public class Robot extends TimedRobot {
     m_drive.setExpiration(0.50);
     m_drive.arcadeDrive(0, 0, true);
     m_drive.setSafetyEnabled(false);
-    limitSwitchLower = new DigitalInput(0);
-    limitSwitch1 = new DigitalInput(1);
-    limitSwitch2 = new DigitalInput(2);
-    limitSwitchUpper = new DigitalInput(3);
 
-    UsbCamera camera0 = CameraServer.getInstance().startAutomaticCapture("SecondCam", 0);
-    camera0.setResolution(IMG_WIDTH / 2, IMG_HEIGHT / 2);
-    camera0.setFPS(15);
-
-    UsbCamera camera1 = CameraServer.getInstance().startAutomaticCapture("DriveCam", 1);
-    camera1.setResolution(IMG_WIDTH / 2, IMG_HEIGHT / 2);
-    camera1.setFPS(15);
     System.out.println("END Robot Init: ");
 
     m_colorMatcher.addColorMatch(kBlueTarget);
@@ -255,9 +246,9 @@ public class Robot extends TimedRobot {
     //INTEVAL2
     while(timer.get()>=4 && timer.get()<8){
       m_BeltMotor.set(0);
-      m_LOutakeMotor.set(0);
-      m_ROutakeMotor.set(0);
-      m_left.set(0.00);
+      m_LOutakeMotor.set(m_zero);
+      m_ROutakeMotor.set(m_zero);
+      m_left.set(m_zero);
       m_right.set(0.25);
     }
     while(timer.get()>=8 && timer.get()<9){
@@ -265,17 +256,17 @@ public class Robot extends TimedRobot {
       m_right.set(-0.15);
     }
     while(timer.get()>=9&&timer.get()<11){
-      m_left.set(0.00);
+      m_left.set(m_zero);
       m_right.set(0.25);
     }
     while(timer.get()<15){
-      m_right.set(0.0);
-      m_left.set(0.0);
+      m_right.set(m_zero);
+      m_left.set(m_zero);
       
     }
-    m_LOutakeMotor.set(0.0);
-    m_ROutakeMotor.set(0.0);
-    m_BeltMotor.set(0.0);
+    m_LOutakeMotor.set(m_zero);
+    m_ROutakeMotor.set(m_zero);
+    m_BeltMotor.set(m_zero);
     
 
 
@@ -323,14 +314,15 @@ public class Robot extends TimedRobot {
       X = X *0.75; //reduce to 75% speed if lift is up beyond level 1
     }
     m_drive.arcadeDrive(-X, Z, true); // Drive the robot
-    //ballBelt(); //Controlls ball intake method
+    
+    //////////////////////////Main Methods for Operation\\\\\\\\\\\\\\\\\\\\\\\\\
+   
     ballControl(); // call ball control routine(for intake and shooting)
     ballControlSensor();
     beltControl();
     Climber();
     BarCrawl();
     StopAll();
-   // updateDisplays(); // call Dashboard debug display 
   }
 
   @Override
@@ -402,14 +394,14 @@ public class Robot extends TimedRobot {
       m_IntakeMotor.set(m_Intake);
     }
     if (control_stick.getRawButtonReleased(BTNINTAKE) == true) {
-      m_IntakeMotor.set(0);
+      m_IntakeMotor.set(m_zero);
 
     }
     if (control_stick.getRawButtonPressed(BTNINTAKEBACK) == true) {
       m_IntakeMotor.set(-m_Intake);
     }
     if (control_stick.getRawButtonReleased(BTNINTAKEBACK) == true) {
-      m_IntakeMotor.set(0);
+      m_IntakeMotor.set(m_zero);
 
     }
     if (control_stick.getRawButtonPressed(BTNSHOOTERHIGH) == true) {
@@ -417,24 +409,24 @@ public class Robot extends TimedRobot {
       m_ROutakeMotor.set(m_ROutakeHigh);
     }
     if (control_stick.getRawButtonReleased(BTNSHOOTERHIGH) == true) {
-      m_LOutakeMotor.set(0);
-      m_ROutakeMotor.set(0);
+      m_LOutakeMotor.set(m_zero);
+      m_ROutakeMotor.set(m_zero);
     }
     if (control_stick.getRawButtonPressed(BTNSHOOTERLOW) == true) {
       m_LOutakeMotor.set(m_LOutakeLow); //This section defines the low speed shot
       m_ROutakeMotor.set(m_ROutakeLow);
     }
     if (control_stick.getRawButtonReleased(BTNSHOOTERLOW) == true) {
-      m_LOutakeMotor.set(0);
-      m_ROutakeMotor.set(0);
+      m_LOutakeMotor.set(m_zero);
+      m_ROutakeMotor.set(m_zero);
     }
     if (control_stick.getRawButtonPressed(BTNSHOOTERBACK) == true) {
       m_LOutakeMotor.set(-.70);
       m_ROutakeMotor.set(.70);
     }
     if (control_stick.getRawButtonReleased(BTNSHOOTERBACK) == true) {
-      m_LOutakeMotor.set(0.0);
-      m_ROutakeMotor.set(0.0);
+      m_LOutakeMotor.set(m_zero);
+      m_ROutakeMotor.set(m_zero);
     }
   }
  //**************************************************\\
@@ -445,13 +437,13 @@ public class Robot extends TimedRobot {
       m_ClimbMotor.set(m_ClimbUp);
     }
     if (control_stick.getRawButtonReleased(BTNCLIMBUP) == true){
-      m_ClimbMotor.set(0);
+      m_ClimbMotor.set(m_zero);
     }
     if (control_stick.getRawButtonPressed(BTNCLIMBDOWN) == true) {
       m_ClimbMotor.set(m_ClimbDown);
     }
     if (control_stick.getRawButtonReleased(BTNCLIMBDOWN) == true) {
-      m_ClimbMotor.set(0);
+      m_ClimbMotor.set(m_zero);
     }
   }
  //******************************************\\
@@ -462,13 +454,13 @@ public void BarCrawl() {
     CrawlMotor.set(m_CrawlRight);
   }
   if (control_stick.getRawButtonReleased(BTNCRAWLRIGHT) == true){
-    CrawlMotor.set(0);
+    CrawlMotor.set(m_zero);
   }
   if (control_stick.getRawButtonPressed(BTNCRAWLLEFT) == true) {
     CrawlMotor.set(m_CrawlLeft);
   }
   if (control_stick.getRawButtonReleased(BTNCRAWLLEFT) == true) {
-    CrawlMotor.set(0);
+    CrawlMotor.set(m_zero);
   }
 }
  //******************************************\\
@@ -480,13 +472,13 @@ public void BarCrawl() {
      m_BeltMotor.set(m_Belt); 
      }
      if (control_stick.getRawButtonReleased(BTNBELT) == true) {
-      m_BeltMotor.set(0.0); 
+      m_BeltMotor.set(m_zero); 
     }
     if(control_stick.getRawButtonPressed(BTNBELTREVERSE)==true){
-      m_BeltMotor.set(-0.90);
+      m_BeltMotor.set(-m_Belt);
     }
     if(control_stick.getRawButtonReleased(BTNBELTREVERSE)==true){
-      m_BeltMotor.set(0.0);
+      m_BeltMotor.set(m_zero);
     }
   }
   //***************************************************************\\
@@ -495,12 +487,12 @@ public void BarCrawl() {
   
   public void StopAll() {
     if (drive_stick.getRawButton(BTNSTOPALL) = true) {
-      m_LOutakeMotor.set(0.0);
-      m_ROutakeMotor.set(0.0);
-      m_BeltMotor.set(0.0);
-      m_ColorSpinner.set(0.0);
-      m_ClimbMotor.set(0.0);
-      CrawlMotor.set(0.0);
+      m_LOutakeMotor.set(m_zero);
+      m_ROutakeMotor.set(m_zero);
+      m_BeltMotor.set(m_zero);
+      m_ColorSpinner.set(m_zero);
+      m_ClimbMotor.set(m_zero);
+      CrawlMotor.set(m_zero);
     }
   }
   
@@ -520,7 +512,7 @@ public void BarCrawl() {
     }
   
   public void ballControlSensor() {
-  //gets the color from te sensor and then matches it with its "most likely" color
+  //gets the color from the sensor and then matches it with its "most likely" color
   //use detected.color for comparisons because that's what is needed to compare colors
   Color match = m_colorSensor.getColor();
   ColorMatchResult detected = m_colorMatcher.matchClosestColor(match);
@@ -563,20 +555,20 @@ public void BarCrawl() {
       //if the rotation surpasses 3 and the color matches with the color we want to stop at
       //the motor speed is set to 0 to stop running
   if(rotation>6 && detected.color == kRedTarget && button==0){
-      m_ColorSpinner.set(0.0);
+      m_ColorSpinner.set(m_zero);
       total = endtotal;
         }
 
   if(rotation>6 && detected.color == kGreenTarget && button==1){
-    m_ColorSpinner.set(0.0);
+    m_ColorSpinner.set(m_zero);
     total = endtotal;
     }
   if(rotation>6 && detected.color == kBlueTarget && button==2){
-    m_ColorSpinner.set(0.0);
+    m_ColorSpinner.set(m_zero);
     total = endtotal;
       }
   if(rotation>6 && detected.color == kYellowTarget && detected.confidence>0.95 && button==3){
-    m_ColorSpinner.set(0.0);
+    m_ColorSpinner.set(m_zero);
     total = endtotal;
         }
   }
@@ -584,21 +576,5 @@ public void BarCrawl() {
   if (button<0){
     rotation = startTotal;
     }
-  }
-
-  //*************************************************************************\\
-  //This function displays info on the Labview Smartdashboard periodically   \\
-  //*************************************************************************\\
-  public void updateDisplays() {
-    if (displayCtr % 25 == 0) { // Update displays on Dashboard every ~500msec
-      displayCtr = 0; // reset display CTR
-      SmartDashboard.putString("DB/String 0", Double.toString(Y));
-      SmartDashboard.putString("DB/String 1", "Next Stage: " + Double.toString(destinationStage));
-      SmartDashboard.putString("DB/String 2", "Current Stage: " + Double.toString(currentStage));
-      SmartDashboard.putString("DB/String 3", "Elev Speed: " + Double.toString(m_elevatorSpeed));
-      SmartDashboard.putString("DB/String 3", "Elev Dir: " + Double.toString(elevatorDir));  
-    }
-
-    displayCtr++;
-  }
-} //End all
+ 
+  //End all
